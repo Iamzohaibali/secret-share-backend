@@ -127,10 +127,35 @@ export const getSecretById = async (req, res, next) => {
   }
 };
 
-// PATCH /api/secrets/:id  (owner can update title/tags/expiry, not the content)
+// GET /api/secrets/:id/content  (owner only â€” decrypts content for editing.
+// This does NOT touch viewCount/burn state; those only track recipient reveals.)
+export const getSecretContent = async (req, res, next) => {
+  try {
+    const secret = await Secret.findOne({
+      _id: req.params.id,
+      owner: req.userId,
+      isDeleted: false,
+    });
+    if (!secret) {
+      return res.status(404).json({ success: false, message: "Secret not found" });
+    }
+
+    const content = decryptText({
+      content: secret.encryptedContent,
+      iv: secret.iv,
+      authTag: secret.authTag,
+    });
+
+    res.json({ success: true, data: { content } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/secrets/:id  (owner can update title/tags/expiry/content, not the share link)
 export const updateSecret = async (req, res, next) => {
   try {
-    const { title, tags, expiresAt, maxViews } = req.body;
+    const { title, tags, expiresAt, maxViews, content } = req.body;
     const secret = await Secret.findOne({
       _id: req.params.id,
       owner: req.userId,
@@ -144,6 +169,13 @@ export const updateSecret = async (req, res, next) => {
     if (tags !== undefined) secret.tags = tags;
     if (expiresAt !== undefined) secret.expiresAt = expiresAt ? new Date(expiresAt) : null;
     if (maxViews !== undefined) secret.maxViews = maxViews;
+
+    if (content !== undefined && content !== null && content.trim() !== "") {
+      const { content: encryptedContent, iv, authTag } = encryptText(content);
+      secret.encryptedContent = encryptedContent;
+      secret.iv = iv;
+      secret.authTag = authTag;
+    }
 
     await secret.save();
     res.json({ success: true, data: publicShape(secret) });

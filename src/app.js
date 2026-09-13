@@ -6,6 +6,10 @@ import { rateLimit } from "express-rate-limit";
 import secretRoutes from "./routes/secretRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
+//kjsdfkjskjh
+
+//fhsghah
+
 const app = express();
 
 const allowedOrigins = (process.env.CLIENT_URLS || "http://localhost:5173")

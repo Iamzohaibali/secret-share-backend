@@ -1,9 +1,10 @@
-﻿import express from "express";
+import express from "express";
 import { requireAuthUser } from "../middleware/auth.js";
 import {
   createSecret,
   getMySecrets,
   getSecretById,
+  getSecretContent,
   updateSecret,
   deleteSecret,
   getShareMeta,
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post("/secrets", requireAuthUser, createSecret);
 router.get("/secrets", requireAuthUser, getMySecrets);
 router.get("/secrets/:id", requireAuthUser, getSecretById);
+router.get("/secrets/:id/content", requireAuthUser, getSecretContent);
 router.patch("/secrets/:id", requireAuthUser, updateSecret);
 router.delete("/secrets/:id", requireAuthUser, deleteSecret);
 
